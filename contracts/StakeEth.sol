@@ -4,9 +4,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract StakeERC20 {
     // state vars that holds owner address
-    address public owner;
+    address owner;
     // Desired Erc20 Tokenaddress
-    address public tokenAddress;
+    address tokenAddress;
 
     // total amount of stakes in the contract
     uint256 public totalStaked;
@@ -119,20 +119,22 @@ contract StakeERC20 {
         // calculate for the users reward and assign it to the user's stake.rewards for easy retrival
         // SI of P x R x T / 
         userStake.rewards = stakeAmount * rewardRate * stakingDuration / (365 days * 100);
+        
     }
 
     function unStake() external payable {
 
+        // call the function to update the users rewards
+        updateRewards();
+
         // Grabbing a users stake and staking plan from the mapping of stakes
-        Stake storage userStake = stakes[msg.sender];
+        Stake memory userStake = stakes[msg.sender];
 
         // ensuring that the user actually has a stake in the specified plan
         require(userStake.amount > 0, "No stake found");
+
         // Time check to reject immature unstakes
         require(block.timestamp >= userStake.unlockTime, "Staking period not ended");
-
-        // call the function to update the users rewards
-        updateRewards();
 
         // get the user's principal stake
         uint256 stakeBalance = userStake.amount;
@@ -145,14 +147,13 @@ contract StakeERC20 {
         uint256 contractBalance = IERC20(tokenAddress).balanceOf(address(this));
         require(contractBalance >= totalPayOut, "Insufficient contract balance");
 
-        // Transfer staked tokens and rewards back to user
-        // Transfer staked tokens and rewards back to user
-        require(IERC20(tokenAddress).transfer(msg.sender, totalPayOut), "Transfer failed");
-
-        // Update state variable -- COME BACK TO FIGURE OUT THE UPDATEERROR
+        // Update state variables
         // totalStaked -= stakeBalance;
         // userStake.plan.totalStaked -= stakeBalance;
         // userStake.plan.totalRewards += reward;
+
+        // Transfer staked tokens and rewards back to user
+        require(IERC20(tokenAddress).transfer(msg.sender, totalPayOut), "Transfer failed");
 
         // Reset user's stake
         delete stakes[msg.sender];
@@ -161,9 +162,9 @@ contract StakeERC20 {
         emit Withdrawn(msg.sender, totalPayOut);
     }
 
-
     // Function to get contract's token balance
     function getContractBalance() external view onlyOwner returns(uint256) {
         return IERC20(tokenAddress).balanceOf(address(this));
     }
+
 }
