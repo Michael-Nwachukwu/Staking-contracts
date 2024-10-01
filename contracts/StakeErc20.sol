@@ -48,11 +48,11 @@ contract StakeERC20 {
         _;
     }
 
-    event Staked(address indexed user, uint256 amount);
+    event StakedSuccessfully(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
 
     // Function to add a new staking plan to the contract
-    function addStakingPlan(string memory _name, uint _duration, uint8 _rate) external onlyOwner {
+    function addStakingPlan(string memory _name, uint _duration, uint8 _rate) public onlyOwner {
 
         StakingPlan memory newPlan = StakingPlan({
             name: _name,
@@ -66,7 +66,7 @@ contract StakeERC20 {
     }
    
     // Function to stake tokens to the contract
-    function stake(uint256 _amount, uint256 _plan) external {
+    function stake(uint256 _amount, uint256 _plan) public {
 
         // First run sanity check to ensure non-address zero interaction
         require(msg.sender != address(0), "Zero address detected");
@@ -102,7 +102,7 @@ contract StakeERC20 {
         totalStaked += _amount;
 
         // emit event staked
-        emit Staked(msg.sender, _amount);
+        emit StakedSuccessfully(msg.sender, _amount);
     }
 
     // Function to calculate and update rewards
@@ -124,7 +124,7 @@ contract StakeERC20 {
     }
 
     // unstake function
-    function unStake() external payable {
+    function unStake() public payable {
 
         // call the function to update the users rewards
         updateRewards();
@@ -166,7 +166,7 @@ contract StakeERC20 {
 
 
     // Function to get contract's token balance
-    function getContractBalance() external view onlyOwner returns(uint256) {
+    function getContractBalance() public view onlyOwner returns(uint256) {
         return IERC20(tokenAddress).balanceOf(address(this));
     }
 }
